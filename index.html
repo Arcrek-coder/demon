@@ -144,8 +144,9 @@ function secTxt(){ return `時間：每題 ${C.time}s、答對推 ${C.kb}s、答
 let S = null, tNow = 0;
 
 function fresh(){
-  return { run:false, over:null, paused:false, dist:1, correct:0, wrong:0, q:null, ans:0, typed:'', tq:0, elapsed:0,
-           worldX:0, parts:[], bossFade:1, lunge:0, sweep:null, jumping:false, jumpT:0 };
+  return { run:false, over:null, paused:false, dist:1, distTarget:1, correct:0, wrong:0, q:null, ans:0, typed:'', tq:0, elapsed:0,
+           worldX:0, parts:[], bossFade:1, lunge:0, sweep:null, jumping:false, jumpT:0,
+           magic:null, flash:0, shake:0, flinch:0 };
 }
 function mod(a,m){ return ((a % m) + m) % m; }
 function rnd(n){ return 1 + Math.floor(Math.random()*n); }
@@ -211,12 +212,15 @@ function submit(){
   const v = parseInt(S.typed,10);
   if (v === S.ans){
     S.correct++;
-    S.dist = Math.min(1, S.dist + C.kb / C.time);
+    S.distTarget = Math.min(1, S.distTarget + C.kb / C.time);   // 魔王会被推回去（平滑滑行）
     S.jumping = true; S.jumpT = 0;
+    const px = DW*.18, gy = DH*.72;
+    S.magic = { t:0, dur:0.55, charge:0.18, hit:false, trail:[], x0:px+34, y0:gy-52, x1:px+DW*.66*S.dist, y1:gy-64 };
     burst(); rainbowSweep();
-    beep([320,520,760],.16,'triangle',.09);
+    beep([300,520,700],.1,'sine',.09);            // 蓄力
+    beep([900,1200,1500],.08,'square',.09);       // 射出
     beep([523,659,784,1046],.12,'square',.12);
-    msg('答對！魔王被擊退。');
+    msg('答對！魔力在法杖尖端聚集…');
     if (S.correct >= C.win){ S.over='win'; S.bossFade=0; addRec();
       beep([659,784,988,1319,1568],.18,'triangle',.14); msg(`打倒魔王！用了 ${S.correct} 題，答錯 ${S.wrong} 題，用時 ${Math.round(S.elapsed*10)/10}s。（已存入紀錄）`); }
     newQ();
@@ -236,14 +240,39 @@ function step(dt){
   if (S.over){ S.bossFade = Math.max(0, S.bossFade - dt*1.6); S.lunge = Math.min(1, S.lunge + dt*3); }
   else if (S.run){
     // 玩家不移動：背景不捲動
-    S.dist -= dt / C.time;              // 魔王持續靠近
+    S.distTarget -= dt / C.time;              // 魔王持續靠近
+    S.dist += (S.distTarget - S.dist) * Math.min(1, dt*3.2);   // 視覺上平滑推進/被推回
     S.tq += dt;
-    if (S.dist <= 0){ S.dist = 0; S.over = 'caught'; beep([180,140,110],.45,'sawtooth',.18); msg(`被抓到了！答對 ${S.correct} 題。`); }
+    if (S.distTarget <= 0){ S.distTarget = 0; S.dist = 0; S.over = 'caught'; beep([180,140,110],.45,'sawtooth',.18); msg(`被抓到了！答對 ${S.correct} 題。`); }
   }
+  if (S.magic){
+    const m = S.magic, prev = m.t; m.t += dt / m.dur;
+    if (prev < 1 && m.t >= 1){
+      m.hit = true; S.flash = .5; S.shake = .5; S.flinch = 1;
+      sparkBurst(m.x1, m.y1, 16); beep([150,110,80],.22,'triangle',.15); msg('擊中！魔王被推回去。');
+    }
+    if (m.t > m.charge && m.t < 1){
+      const e = (m.t - m.charge) / (1 - m.charge);
+      m.trail.push({ x: m.x0 + (m.x1-m.x0)*e*e*(3-2*e), y: m.y0 + (m.y1-m.y0)*e*e*(3-2*e) - 12*Math.sin(Math.PI*((m.t-m.charge)/(1-m.charge))) });
+      if (m.trail.length > 14) m.trail.shift();
+    }
+    if (m.t > 1.6) S.magic = null;
+  }
+  S.flash = Math.max(0, S.flash - dt*1.1);
+  S.shake = Math.max(0, S.shake - dt*1.2);
+  S.flinch = Math.max(0, S.flinch - dt*1.6);
   S.parts.forEach(p => { p.x += p.vx*dt; p.y += p.vy*dt; p.vy += 260*dt; p.life -= dt; });
   S.parts = S.parts.filter(p => p.life > 0);
   if (S.jumping){ S.jumpT += dt/0.6; if (S.jumpT >= 1){ S.jumping = false; S.jumpT = 0; } }
   if (S.sweep){ S.sweep.t += dt/0.9; if (S.sweep.t > 1.4) S.sweep = null; }
+}
+
+function sparkBurst(x, y, n){
+  const cols = ['#fff','#8ef0d6','#ffd76e','#ff5d6c','#c7b6ff','#a4e8ff'];
+  for(let i=0;i<n;i++){
+    const a = Math.random()*Math.PI*2, sp = 60 + Math.random()*160;
+    S.parts.push({ x, y, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp - 60, life:.5+Math.random()*.6, c:cols[i%6], star:Math.random()<.45 });
+  }
 }
 
 function burst(){
@@ -277,7 +306,7 @@ function drawKnight(x, gy, t, over, noShadow){
   X.restore();
 }
 function drawDemon(x, gy, t, fade, lunge){
-  X.save(); X.globalAlpha = fade; X.translate(x, gy);
+  X.save(); X.globalAlpha = fade; X.translate(x + (S.shake?(Math.random()-.5)*10*S.shake:0), gy);
   ell(0, 0, 34, 8, 'rgba(0,0,0,.4)');
   const bob = Math.sin(t*3)*5, ph = Math.sin(t*5)*5;
   r(-16, -18, 10, 18, '#3a2550'); r(8, -18, 10, 18, '#2f1e42');
@@ -291,7 +320,8 @@ function drawDemon(x, gy, t, fade, lunge){
   const eg = X.createRadialGradient(0,-68+bob,1,0,-68+bob,22);
   eg.addColorStop(0,'rgba(255,90,110,.55)'); eg.addColorStop(1,'rgba(255,90,110,0)');
   X.fillStyle=eg; X.fillRect(-26,-90+bob,52,44);
-  r(-8,-71+bob,7,5,'#ff5d6c'); r(3,-71+bob,7,5,'#ff5d6c');
+  const fl = S.flinch || 0;
+  r(-8,-71+bob,7-2*fl,5,'#ff5d6c'); r(3,-71+bob,7-2*fl,5,'#ff5d6c');
   r(-10,-60+bob,20,3,'#f0e2ff');
   // arms reaching (lunge)
   X.strokeStyle='#7b3fb0'; X.lineWidth=6;
@@ -323,8 +353,34 @@ function draw(){
   if(!art(IMG.girl, AR.girl, px, gy - jh, 122, 1, true)) drawKnight(px, gy - jh, tNow, S.over, true);   // 女孩（橘裙、面向魔王）
   if(!art(IMG.demon, AR.demon, dx, gy, 190, S.bossFade)) drawDemon(dx, gy, tNow, S.bossFade, S.lunge); // 黃色小人
 
-  S.parts.forEach(p => { X.globalAlpha = Math.max(0,p.life*2); X.fillStyle=p.c; X.fillRect(p.x,p.y,4,4); });
+  S.parts.forEach(p => { X.globalAlpha = Math.max(0,p.life*2); X.fillStyle=p.c;
+    if (p.star){ const s=3+p.life*4; X.beginPath(); X.moveTo(p.x,p.y-s); X.lineTo(p.x+s,p.y); X.lineTo(p.x,p.y+s); X.lineTo(p.x-s,p.y); X.closePath(); X.fill(); }
+    else X.fillRect(p.x,p.y,4,4); });
   X.globalAlpha = 1;
+
+  /* 魔法彈與法杖光球 */
+  if (S.magic){
+    const m = S.magic;
+    if (m.t <= m.charge){
+      const rr = 5 + 9*(m.t/m.charge);
+      ell(m.x0, m.y0, rr, rr, 'rgba(142,240,214,.5)'); ell(m.x0, m.y0, rr*.45, rr*.45, '#eafff8');
+      X.strokeStyle='rgba(142,240,214,.7)'; X.lineWidth=1.5;
+      for(let i=0;i<4;i++){ const a=i*Math.PI/2 + tNow*4; X.beginPath(); X.moveTo(m.x0,m.y0);
+        X.lineTo(m.x0+Math.cos(a)*(rr+8), m.y0+Math.sin(a)*(rr+8)); X.stroke(); }
+    } else if (m.t < 1){
+      const e = (m.t-m.charge)/(1-m.charge), se = e*e*(3-2*e);
+      const x = m.x0 + (m.x1-m.x0)*se, y = m.y0 + (m.y1-m.y0)*se - 14*Math.sin(Math.PI*e);
+      for(let i=0;i<m.trail.length;i++){ const tp=m.trail[i], a=(i+1)/m.trail.length*.5; ell(tp.x,tp.y,3+4*a,3+4*a,'rgba(142,240,214,.8)'); }
+      X.globalAlpha=1; ell(x,y,13,13,'rgba(170,240,255,.4)'); ell(x,y,7,7,'#f2fbff');
+      X.strokeStyle='#8ef0d6'; X.lineWidth=2;
+      X.beginPath(); X.moveTo(x-10,y); X.lineTo(x+10,y); X.moveTo(x,y-10); X.lineTo(x,y+10); X.stroke();
+    } else {
+      const ht = Math.min(1,(m.t-1)/0.55);
+      X.globalAlpha = 1-ht; X.strokeStyle='#8ef0d6'; X.lineWidth=3;
+      X.beginPath(); X.arc(m.x1, m.y1, 8+ht*36, 0, Math.PI*2); X.stroke();
+      X.globalAlpha = 1;
+    }
+  }
 
   /* 彩虹劃過（答對時從女孩劃到魔王） */
   if (S.sweep && ready(IMG.rainbow)){
@@ -340,6 +396,8 @@ function draw(){
       const dw = h*AR.rainbow; X.drawImage(IMG.rainbow, -dw/2, -h/2, dw, h); X.restore();
     }
   }
+
+  if (S.flash > 0){ X.fillStyle = `rgba(236,244,255,${(S.flash*.28).toFixed(3)})`; X.fillRect(0,0,DW,DH); }
 
   /* HUD: only bars (設定數值不顯示) */
   const bx = 20, bw = DW-40;
