@@ -116,26 +116,28 @@ resize();
 
 const el = id => document.getElementById(id);
 // ===== 設定（可用 ⚙️ 設定彈窗修改）=====
-const C = { star:3, time:12, win:10, max:12, cap:20, neg:'no', ops:'mix', kb:8, pen:2, sound:true };
+const C = { star:4, time:12, win:6, max:8, cap:15, neg:'no', ops:'add', kb:5, pen:1, sound:true };
 /* ===== 難度星星 0~10（0 最易，10 最難）=====
-   星級一次決定：題型、數字範圍、答案上限、負數、每題秒數、答對擊退、答錯前進、獲勝題數 */
+   星級只決定「題目內容」：題型、數字範圍、答案上限、可否負數。
+   秒數（每題時間、答對擊退、答錯前進）與獲勝題數是獨立設定，不随星級改變。 */
 const STAR = [
-  {ops:'add', max:3,  cap:5,  neg:'no',  time:15, kb:8,   pen:0,   win:3 },
-  {ops:'add', max:4,  cap:7,  neg:'no',  time:14, kb:7,   pen:0,   win:4 },
-  {ops:'add', max:5,  cap:10, neg:'no',  time:13, kb:6,   pen:0,   win:5 },
-  {ops:'add', max:6,  cap:12, neg:'no',  time:12, kb:5,   pen:1,   win:5 },
-  {ops:'mix', max:7,  cap:15, neg:'no',  time:12, kb:4.5, pen:1,   win:6 },
-  {ops:'mix', max:8,  cap:18, neg:'no',  time:11, kb:4,   pen:1.5, win:6 },
-  {ops:'mix', max:10, cap:20, neg:'no',  time:10, kb:3.5, pen:1.5, win:7 },
-  {ops:'mix', max:12, cap:25, neg:'no',  time:9,  kb:3,   pen:2,   win:8 },
-  {ops:'mix', max:15, cap:40, neg:'yes', time:8,  kb:2.5, pen:2,   win:9 },
-  {ops:'mix', max:20, cap:60, neg:'yes', time:7,  kb:2,   pen:2,   win:10},
-  {ops:'mix', max:30, cap:99, neg:'yes', time:6,  kb:1.5, pen:2.5, win:12}
+  {ops:'add', max:3,  cap:5,  neg:'no' },
+  {ops:'add', max:4,  cap:7,  neg:'no' },
+  {ops:'add', max:5,  cap:9,  neg:'no' },
+  {ops:'add', max:6,  cap:11, neg:'no' },
+  {ops:'add', max:8,  cap:15, neg:'no' },
+  {ops:'mix', max:6,  cap:12, neg:'no' },
+  {ops:'mix', max:8,  cap:16, neg:'no' },
+  {ops:'mix', max:10, cap:20, neg:'no' },
+  {ops:'mix', max:12, cap:24, neg:'no' },
+  {ops:'mix', max:15, cap:30, neg:'yes'},
+  {ops:'mix', max:20, cap:60, neg:'yes'}
 ];
-const SK = ['ops','max','cap','neg','time','kb','pen','win'];
+const SK = ['ops','max','cap','neg'];
 function isCustom(){ return C.star==null || !STAR[C.star] || SK.some(k => C[k] !== STAR[C.star][k]); }
 function starTxt(s){ const t = STAR[s]; if(!t) return ''; const o = t.ops==='add'?'加法':(t.ops==='sub'?'減法':'加＋減');
-  return `${s}★ ${o}、1–${t.max}、答案≤${t.cap}${t.neg==='yes'?'、可負數':''}、每題 ${t.time}s、答對推 ${t.kb}s、答錯進 ${t.pen}s、${t.win} 題打退魔王`; }
+  return `${s}★ ${o}、數字 1–${t.max}、答案≤${t.cap}${t.neg==='yes'?'、可負數':'、不負數'}`; }
+function secTxt(){ return `時間：每題 ${C.time}s、答對推 ${C.kb}s、答錯進 ${C.pen}s、${C.win} 題打退魔王`; }
 // ==========================================
 let S = null, tNow = 0;
 
@@ -410,13 +412,13 @@ el('mute').onclick = e => { C.sound = !C.sound; saveCfg(); e.target.textContent 
 /* ---------- 星級快速選擇 ---------- */
 const sb = el('starbtns');
 for(let s=0; s<=10; s++){
-  const b = document.createElement('button'); b.dataset.s = s; b.textContent = '★' + s; b.title = starTxt(s);
-  b.onclick = () => { clickSfx(); C.star = s; Object.assign(C, STAR[s]); saveCfg(); syncStar(); fillInputs();
+  const b = document.createElement('button'); b.dataset.s = s; b.textContent = '★' + s; b.title = starTxt(s) + ' ｜ ' + secTxt();
+  b.onclick = () => { clickSfx(); C.star = s; SK.forEach(k => C[k] = STAR[s][k]); saveCfg(); syncStar(); fillInputs();
     if (S && S.q) newQ(); msg(starTxt(s)); };
   sb.appendChild(b);
 }
 function syncStar(){
-  el('starhint').textContent = isCustom() ? starTxt(C.star) + '（⚙️ 自訂過）' : starTxt(C.star);
+  el('starhint').textContent = starTxt(C.star) + (isCustom() ? '（⚙️ 自訂過）' : '') + ' ｜ ' + secTxt();
   [...sb.children].forEach(b => b.classList.toggle('on', +b.dataset.s === C.star && !isCustom()));
 }
 
