@@ -7,6 +7,8 @@
 
 檔案：`index.html`、`girl.svg`、`yellow_character.svg`、`rainbow.svg`、`vercel.json`（no-cache 表頭）。
 
+開發紀錄：`DEVLOG.md`（決策與時間軸）、`AGENTS.md`（接手須知、不變量、踩過的坑）。
+
 ## 難度星星 ★0–10（一鍵選，0 最易、10 最難）
 
 星級**只決定題目內容**；秒數與獲勝題數是獨立設定（⚙️），不隨星級改變。
