@@ -64,7 +64,6 @@ button.sec{background:#223054}
   </div>
 
   <div class="row">
-    <div id="starbtns"></div>
     <div id="starhint"></div>
   </div>
 
@@ -90,6 +89,9 @@ button.sec{background:#223054}
 <div id="mask" class="hide">
   <div class="box">
     <h2>⚙️ 設定</h2>
+    <div class="fld"><span>難度星星 ★（0–10）<i>只決定題目內容：題型/數字範圍/答案上限/負數；秒數在下面自己設</i></span></div>
+    <div id="starbtns"></div>
+    <div id="starhint"></div>
     <div class="fld"><span>答題時間（秒）<i>每一題最多可用時間；魔王走完一趟剛好=this秒數</i></span><input type="number" inputmode="numeric" id="iTime" min="3" max="60"></div>
     <div class="fld"><span>打倒魔王需答對（題）<i>累積答對幾題就獲勝</i></span><input type="number" inputmode="numeric" id="iWin" min="3" max="30"></div>
     <div class="fld"><span>題目數字（1~N）<i>加數/減數的範國1~N，例如 N=12 → 題目可能是 7+9</i></span><input type="number" inputmode="numeric" id="iMax" min="1" max="99"></div>
@@ -393,7 +395,7 @@ let maskOpen = false;
 const keys = ['time','win','max','cap','neg','ops','kb','pen'];
 function fillInputs(){ keys.forEach(k => { const i = el('i' + k[0].toUpperCase() + k.slice(1)); if (i) i.value = C[k]; }); }
 function openCfg(){
-  fillInputs();
+  fillInputs(); syncStar();
   mask.classList.remove('hide'); maskOpen = true;
   if (S) S.paused = true;
 }
