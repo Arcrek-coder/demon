@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 450" width="400" height="450">
+  <defs>
+    <filter id="crayon-filter" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="3" result="noise" />
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="2.5" />
+    </filter>
+  </defs>
+
+  <g id="rainbow-group" fill="none" stroke-linecap="round" stroke-linejoin="round" filter="url(#crayon-filter)">
+    <!-- 1. 最外層紅橘色拱弧 -->
+    <path d="M 60 410 C 50 320, 55 120, 150 70 C 230 30, 310 75, 330 150 C 345 200, 360 300, 375 365"
+          stroke="#E64A2F" stroke-width="7" />
+
+    <!-- 2. 橙色弧線 -->
+    <path d="M 72 410 C 65 330, 75 140, 160 90 C 235 50, 305 90, 320 160 C 335 220, 345 310, 355 360"
+          stroke="#F37E22" stroke-width="7" />
+
+    <!-- 3. 黃色弧線 -->
+    <path d="M 85 410 C 78 340, 85 160, 170 110 C 240 70, 298 105, 310 170 C 322 230, 335 315, 340 355"
+          stroke="#F6C827" stroke-width="6.5" />
+
+    <!-- 4. 淺綠色弧線 -->
+    <path d="M 98 412 C 92 345, 95 180, 175 130 C 242 88, 290 120, 300 180 C 310 240, 320 310, 325 350"
+          stroke="#68BA45" stroke-width="6.5" />
+
+    <!-- 5. 亮青藍色弧線 -->
+    <path d="M 110 415 C 105 350, 110 200, 180 150 C 245 105, 280 135, 290 190 C 298 245, 305 310, 310 345"
+          stroke="#1FA2DC" stroke-width="6.5" />
+
+    <!-- 6. 桃紅 / 紫紅色弧線 -->
+    <path d="M 122 418 C 118 355, 122 220, 185 170 C 245 122, 272 150, 280 200 C 288 250, 292 310, 295 342"
+          stroke="#D82782" stroke-width="6.5" />
+
+    <!-- 7. 藍色弧線 -->
+    <path d="M 134 420 C 130 360, 135 240, 190 190 C 245 142, 262 165, 270 210 C 278 255, 280 305, 282 340"
+          stroke="#3954A5" stroke-width="6" />
+
+    <!-- 8. 嫩綠弧線 -->
+    <path d="M 146 422 C 142 365, 148 260, 195 210 C 245 160, 255 180, 260 220 C 265 260, 268 300, 270 338"
+          stroke="#3FA364" stroke-width="6" />
+
+    <!-- 9. 內凹瀑布/洞穴深色線條：灰棕色 -->
+    <path d="M 158 425 C 155 370, 160 280, 200 230 C 235 185, 245 200, 250 235 C 255 270, 256 310, 258 335"
+          stroke="#8B7B70" stroke-width="5.5" />
+
+    <!-- 10. 最內層黑色垂直條紋（向下垂流的瀑布感） -->
+    <path d="M 172 428 C 170 380, 175 320, 195 265 C 210 230, 225 230, 230 265 C 235 300, 236 340, 238 375"
+          stroke="#26272D" stroke-width="6" />
+    <path d="M 188 426 C 185 390, 188 340, 202 290 C 208 265, 218 265, 220 295 C 222 325, 224 365, 225 390"
+          stroke="#3F4249" stroke-width="5" />
+    <path d="M 202 420 C 200 395, 202 355, 208 315 C 212 290, 214 310, 215 345 L 216 410"
+          stroke="#696A6E" stroke-width="4.5" />
+  </g>
+</svg>

@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 620" width="520" height="620">
+  <defs>
+    <filter id="handdrawn-filter" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="3" result="noise" />
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="2.2" />
+    </filter>
+  </defs>
+
+  <g id="girl-character" filter="url(#handdrawn-filter)">
+    <!-- 1. 手拿黃色星形物 (左手邊鋸齒物件) -->
+    <path d="M 60 415 L 75 385 L 105 388 L 120 365 L 140 380 L 165 370 L 175 395 L 195 405 L 180 430 L 195 450 L 165 455 L 155 480 L 130 470 L 110 488 L 90 468 L 65 470 L 80 442 Z"
+          fill="none" stroke="#F1D11B" stroke-width="4.5" stroke-linejoin="round" stroke-linecap="round" />
+
+    <!-- 2. 手臂與軀幹骨架 (黃色細線) -->
+    <!-- 左手臂連到星形物 -->
+    <path d="M 195 425 L 235 398 L 265 365" fill="none" stroke="#E6BE22" stroke-width="3.5" stroke-linecap="round" />
+    <!-- 脖子 -->
+    <path d="M 283 345 L 283 370" fill="none" stroke="#E6BE22" stroke-width="4" stroke-linecap="round" />
+    <!-- 雙腿與雙腳 -->
+    <path d="M 262 505 L 260 550 L 250 558 L 268 558 Z" fill="none" stroke="#E2BF18" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" />
+    <path d="M 302 500 L 305 545 L 295 558 L 315 558 Z" fill="none" stroke="#E2BF18" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" />
+
+    <!-- 3. 洋裝裙擺底色 (橘色與深紅橘色色塊拼接) -->
+    <!-- 洋裝左半 (亮橘色) -->
+    <path d="M 270 375 L 290 370 L 295 460 L 250 515 L 230 485 L 210 520 L 195 485 L 235 410 Z"
+          fill="#F58E1E" stroke="#F07C12" stroke-width="2" />
+    <!-- 洋裝右半 (紅橘色蠟筆感填充) -->
+    <path d="M 285 368 L 340 345 L 360 410 L 375 490 L 350 455 L 335 500 L 320 460 L 290 470 Z"
+          fill="#DC4818" stroke="#DC4818" stroke-width="2" />
+    
+    <!-- 裙擺紋理與筆觸 -->
+    <g stroke="#372674" stroke-width="3.5" stroke-linecap="round">
+      <path d="M 205 485 L 218 450" />
+      <path d="M 245 465 L 258 420" />
+      <path d="M 268 495 L 273 455" />
+      <path d="M 285 450 L 288 430" />
+      <path d="M 292 480 L 296 460" />
+      <path d="M 302 440 L 308 415" />
+      <path d="M 312 475 L 318 450" />
+      <path d="M 326 430 L 335 405" />
+    </g>
+
+    <!-- 裙邊黃色手繪勾邊 -->
+    <path d="M 190 495 L 210 535 L 235 500 L 250 538 L 290 495 L 325 520 L 340 480 L 375 498"
+          fill="none" stroke="#F1CC1E" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" />
+
+    <!-- 4. 肩膀兩側桃紅色花結 -->
+    <g fill="#DE3355" stroke="#DE3355" stroke-width="2">
+      <!-- 左肩花結 -->
+      <circle cx="225" cy="405" r="5" />
+      <circle cx="218" cy="400" r="4.5" />
+      <circle cx="232" cy="402" r="4.5" />
+      <circle cx="224" cy="412" r="4.5" />
+      <!-- 右肩花結 -->
+      <circle cx="355" cy="415" r="5" />
+      <circle cx="348" cy="410" r="4.5" />
+      <circle cx="362" cy="412" r="4.5" />
+      <circle cx="356" cy="422" r="4.5" />
+    </g>
+
+    <!-- 5. 綠色泡泡辮 (由右耳側垂下的圈圈鏈) -->
+    <g fill="none" stroke="#007F66" stroke-width="5" stroke-linecap="round">
+      <ellipse cx="365" cy="225" rx="7" ry="10" />
+      <ellipse cx="368" cy="245" rx="7.5" ry="11" />
+      <ellipse cx="372" cy="268" rx="8" ry="12" />
+      <ellipse cx="373" cy="293" rx="8" ry="12.5" />
+      <ellipse cx="370" cy="318" rx="8" ry="12" />
+      <ellipse cx="368" cy="342" rx="8" ry="12" />
+      <ellipse cx="360" cy="365" rx="7.5" ry="11" />
+      <ellipse cx="355" cy="385" rx="7" ry="10" />
+    </g>
+
+    <!-- 6. 臉部輪廓 (粉紅線條) -->
+    <path d="M 285 130 C 350 132, 368 180, 366 240 C 365 305, 335 348, 285 348 C 235 348, 245 290, 246 230 C 248 160, 260 130, 285 130 Z"
+          fill="none" stroke="#FA829F" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" />
+
+    <!-- 7. 頭髮 (墨綠色筆觸塗滿與髮飾) -->
+    <!-- 左上小啾啾/小髮圈 -->
+    <circle cx="242" cy="142" r="6" fill="none" stroke="#006A53" stroke-width="4.5" />
+    <!-- 頂部綠色短髮/瀏海 -->
+    <path d="M 244 142 C 265 125, 310 115, 345 138 C 362 148, 366 168, 360 180 C 350 160, 315 132, 275 142 C 255 147, 242 165, 240 215 C 236 215, 235 155, 244 142 Z"
+          fill="#006E58" stroke="#006E58" stroke-width="3" stroke-linejoin="round" />
+    <!-- 髮流筆觸細節 -->
+    <path d="M 260 140 L 350 160" stroke="#004D3D" stroke-width="3.5" stroke-linecap="round" />
+    <path d="M 270 148 L 355 172" stroke="#004D3D" stroke-width="3.5" stroke-linecap="round" />
+
+    <!-- 8. 五官 (眼睛、腮紅、大笑嘴巴) -->
+    <!-- 藍色圓點眼睛 -->
+    <circle cx="261" cy="198" r="4.5" fill="#1C4EB0" />
+    <circle cx="332" cy="195" r="4.5" fill="#1C4EB0" />
+
+    <!-- 黃色腮紅點 -->
+    <circle cx="255" cy="250" r="7.5" fill="#E8C30C" />
+    <circle cx="336" cy="254" r="7.5" fill="#E8C30C" />
+
+    <!-- 紅色大笑嘴巴 -->
+    <path d="M 270 240 C 271 285, 275 315, 298 315 C 322 315, 325 270, 312 230 C 309 280, 292 295, 280 280 C 274 270, 271 255, 270 240 Z"
+          fill="none" stroke="#BA1426" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" />
+  </g>
+</svg>

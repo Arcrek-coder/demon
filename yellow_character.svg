@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 500" width="320" height="500">
+  <defs>
+    <filter id="crayon-sketch" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="3" result="noise" />
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="2.2" />
+    </filter>
+  </defs>
+
+  <g id="yellow-figure" filter="url(#crayon-sketch)" stroke-linecap="round" stroke-linejoin="round">
+    <!-- 1. 帽子 / 頭部大輪廓 (亮黃色) -->
+    <!-- 頂部帽子弧頂 -->
+    <path d="M 120 160 C 105 140, 105 90, 145 75 C 185 60, 220 90, 215 130 C 212 145, 195 155, 180 155"
+          fill="none" stroke="#E6C816" stroke-width="4.5" />
+    <!-- 帽子下緣 / 臉頰輪廓 -->
+    <path d="M 115 142 C 130 150, 175 145, 205 138"
+          fill="none" stroke="#E6C816" stroke-width="4.5" />
+    <path d="M 125 152 C 120 178, 135 200, 160 200 C 185 200, 198 178, 190 148"
+          fill="none" stroke="#E6C816" stroke-width="4" />
+
+    <!-- 2. 生氣 / 大吼黑色五官 -->
+    <!-- 黑色倒八字眼 / 生氣眉毛 -->
+    <path d="M 140 145 L 149 152" stroke="#1D1D20" stroke-width="4" stroke-linecap="round" />
+    <path d="M 172 146 L 163 153" stroke="#1D1D20" stroke-width="4" stroke-linecap="round" />
+    <!-- 張大嘴吼叫的黑色大嘴巴 -->
+    <path d="M 145 162 C 142 178, 146 192, 160 192 C 174 192, 177 178, 175 162 C 168 158, 152 158, 145 162 Z"
+          fill="#1D1D20" stroke="#1D1D20" stroke-width="3" />
+
+    <!-- 3. 上衣軀幹 (簡筆梯形/長方形) -->
+    <path d="M 132 205 L 182 203 L 202 245 L 115 248 Z"
+          fill="none" stroke="#E6C816" stroke-width="4.5" />
+    <!-- 衣服下緣短橫線裝飾/下擺 -->
+    <path d="M 128 248 L 188 246" stroke="#E6C816" stroke-width="4" />
+
+    <!-- 4. 手臂 -->
+    <!-- 左手臂 (自然垂放微曲) -->
+    <path d="M 125 210 L 105 250" stroke="#E6C816" stroke-width="4.5" />
+    <!-- 右手臂 (向右側延伸下垂) -->
+    <path d="M 190 208 L 222 250 L 230 285" stroke="#E6C816" stroke-width="4.5" />
+
+    <!-- 5. 右手拿著的黑色物品 (手銬/眼鏡/繩環) -->
+    <g fill="none" stroke="#1D1D20" stroke-width="4.5" stroke-linecap="round">
+      <ellipse cx="232" cy="295" rx="5" ry="7" />
+      <ellipse cx="240" cy="315" rx="6" ry="8" />
+      <path d="M 235 301 L 238 308" />
+      <path d="M 245 320 L 248 335" />
+    </g>
+
+    <!-- 6. 雙腿與長褲 -->
+    <!-- 褲子中心線條與雙腿外側 -->
+    <path d="M 135 250 L 132 345" stroke="#E6C816" stroke-width="4" />
+    <path d="M 152 250 L 150 340" stroke="#E6C816" stroke-width="3.5" />
+    <path d="M 172 248 L 175 342" stroke="#E6C816" stroke-width="4" />
+    <path d="M 142 250 L 140 320" stroke="#E6C816" stroke-width="2.5" />
+
+    <!-- 7. 大鞋子 (左右兩隻梯形/包頭鞋) -->
+    <!-- 左鞋 -->
+    <path d="M 115 365 L 140 365 L 142 345 L 122 345 Z"
+          fill="none" stroke="#E6C816" stroke-width="4.5" />
+    <!-- 右鞋 -->
+    <path d="M 168 368 L 195 368 L 195 348 L 174 348 Z"
+          fill="none" stroke="#E6C816" stroke-width="4.5" />
+  </g>
+</svg>

@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>數學魔王：加減法追逐戰</title>
+<style>
+:root{--fg:#e8ecf6;--acc:#7c5cff;--good:#3ddc97;--bad:#ff5d6c;--panel:#141c36;--line:#2b3557}
+*{box-sizing:border-box}
+html,body{height:100%;overflow:hidden}
+body{margin:0;background:radial-gradient(1100px 600px at 50% -10%,#16204a,#0b1020);color:var(--fg);
+font:14px/1.5 ui-monospace,Consolas,"Noto Sans TC",sans-serif;-webkit-text-size-adjust:100%}
+#wrap{max-width:1100px;margin:0 auto;padding:calc(10px + env(safe-area-inset-top)) 12px calc(10px + env(safe-area-inset-bottom));
+height:100dvh;display:flex;flex-direction:column;gap:8px}
+h1{font-size:17px;margin:0}
+canvas#game{width:100%;flex:1 1 auto;min-height:140px;display:block;border-radius:12px;background:#0f1733;box-shadow:0 8px 30px rgba(0,0,0,.45)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+label{display:flex;gap:6px;align-items:center;white-space:nowrap}
+input[type=number]{width:70px;padding:8px;font-size:17px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--fg)}
+select{padding:8px;font-size:17px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--fg)}
+button{padding:10px 14px;border:0;border-radius:10px;background:var(--acc);color:#fff;cursor:pointer;font:inherit;
+min-height:44px;touch-action:manipulation;user-select:none;-webkit-tap-highlight-color:transparent}
+button:active{transform:scale(.96)}
+button.sec{background:#223054}
+#pad{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+#pad button{background:#1b2645;font-size:22px;padding:14px 0;min-height:54px}
+#pad button.go{background:var(--acc)}
+#keys{display:flex;flex-direction:column;gap:6px;flex:1;min-width:250px}
+#prow{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+#prow button{font-size:18px;padding:12px 0;min-height:52px;background:#1b2645}
+#prow button.go{background:var(--acc)}
+#qcard{display:flex;gap:14px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;flex:1;min-width:220px}
+#qtext{font-size:24px;font-weight:700}
+#typed{font-size:24px;font-weight:700;color:var(--good);min-width:60px}
+#msg{min-height:20px;font-size:13px;color:#9fb0d0}
+@media (max-width:520px){ #qcard{flex:1 1 100%} #keys{flex:1 1 100%} #pad button{min-height:48px;font-size:20px} }
+#mask{position:fixed;inset:0;background:rgba(5,8,18,.65);display:flex;align-items:center;justify-content:center;z-index:5}
+#mask.hide{display:none}
+#modal{background:#141c36;border:1px solid #2b3557;border-radius:14px;padding:16px 18px;max-width:360px;width:92%;box-shadow:0 10px 40px rgba(0,0,0,.55)}
+#modal h2{margin:0 0 10px;font-size:16px}
+#modal .fld{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:7px 0}
+#modal .fld span{display:flex;flex-direction:column;gap:2px}
+#modal .fld i{font-style:normal;font-size:12px;color:#9fb0d0}
+#modal .actions{display:flex;gap:8px;margin-top:12px}
+#modal .note{font-size:12px;color:#9fb0d0;margin-top:8px}
+</style>
+</head>
+<body>
+<div id="wrap">
+  <h1>數學魔王：加減法追逐戰（橫向卷軸）</h1>
+
+  <div class="row">
+    <button id="start">開始 / 重新開始</button>
+    <button class="sec" id="mute">音效 🔊</button>
+    <button class="sec" id="gear">⚙️ 設定</button>
+  </div>
+
+  <canvas id="game"></canvas>
+
+  <div class="row">
+    <div id="qcard"><div id="qtext">—</div><div id="typed"></div></div>
+    <div id="keys"><div id="pad"></div><div id="prow"></div></div>
+  </div>
+  <div id="msg">答對把魔王推回去；拖太久或答錯會被抓住。</div>
+</div>
+
+<div id="mask" class="hide">
+  <div id="modal">
+    <h2>⚙️ 設定</h2>
+    <div class="fld"><span>答題時間（秒）<i>每一題最多可用時間；魔王走完一趟剛好=this秒數</i></span><input type="number" inputmode="numeric" id="iTime" min="3" max="60"></div>
+    <div class="fld"><span>打倒魔王需答對（題）<i>累積答對幾題就獲勝</i></span><input type="number" inputmode="numeric" id="iWin" min="3" max="30"></div>
+    <div class="fld"><span>題目數字（1~N）<i>加數/減數的範國1~N，例如 N=12 → 題目可能是 7+9</i></span><input type="number" inputmode="numeric" id="iMax" min="1" max="99"></div>
+    <div class="fld"><span>答案上限<i>題目的答案不可超過此值；太大會自動重抽題目</i></span><input type="number" inputmode="numeric" id="iCap" min="2" max="200"></div>
+    <div class="fld"><span>減法負數<i>不允許：大數放前，答案≥ 0；允許：可出現 6-9=-3，需輸入負號</i></span><select id="iNeg"><option value="no">不允許負答案</option><option value="yes">允許負答案</option></select></div>
+    <div class="fld"><span>運算<i>混合 = 每題隨機加或減</i></span><select id="iOps"><option value="mix">加＋減</option><option value="add">只有加法</option><option value="sub">只有減法</option></select></div>
+    <div class="fld"><span>答對擊退（秒）<i>在這些秒數內答對，魔王才會被推回去</i></span><input type="number" inputmode="numeric" id="iKb" min="1" max="30"></div>
+    <div class="fld"><span>答錯前進（秒）<i>答錯時魔王立刻多走這些秒數的距離（0=不倒退）</i></span><input type="number" inputmode="numeric" id="iPen" min="0" max="30"></div>
+    <div class="actions"><button id="apply">套用</button><button class="sec" id="close">關閉</button></div>
+    <div class="note">打開設定時遊戲暫停；套用後從下一題開始生效。</div>
+  </div>
+</div>
+
+<script>
+const cv = document.getElementById('game'), X = cv.getContext('2d');
+let W = 960, H = 360, DPR = 1, SC = 1, DW = 960, DH = 360;
+function resize(){ DPR = Math.min(3, window.devicePixelRatio||1); W = cv.clientWidth||960; H = cv.clientHeight||360;
+  SC = Math.max(.65, Math.min(1.35, H/360)); DW = W/SC; DH = H/SC;
+  cv.width = Math.round(W*DPR); cv.height = Math.round(H*DPR); X.setTransform(DPR,0,0,DPR,0,0); }
+addEventListener('resize', resize);
+addEventListener('orientationchange', () => setTimeout(resize, 120));
+if (window.visualViewport) window.visualViewport.addEventListener('resize', resize);
+resize();
+
+const el = id => document.getElementById(id);
+// ===== 設定（可用 ⚙️ 設定彈窗修改）=====
+const C = { time:12, win:10, max:12, cap:20, neg:'no', ops:'mix', kb:8, pen:2, sound:true };
+// ==========================================
+let S = null, tNow = 0;
+
+function fresh(){
+  return { run:false, over:null, paused:false, dist:1, correct:0, wrong:0, q:null, ans:0, typed:'', tq:0,
+           worldX:0, parts:[], bossFade:1, lunge:0, sweep:null };
+}
+function mod(a,m){ return ((a % m) + m) % m; }
+function rnd(n){ return 1 + Math.floor(Math.random()*n); }
+/* ---------- 本地儲存 ---------- */
+const LS = 'math-demon-chase-settings';
+function loadCfg(){ try{ const d = JSON.parse(localStorage.getItem(LS)); if(d) Object.assign(C, d); }catch(e){} }
+function saveCfg(){ try{ localStorage.setItem(LS, JSON.stringify(C)); }catch(e){} }
+loadCfg();
+el('mute').textContent = C.sound ? '音效 🔊' : '音效 🔇';
+function clickSfx(){ beep([880, 660], .045, 'square', .10); }
+
+/* ---------- 素材：小孩畫的 SVG ---------- */
+const IMG = { girl:new Image(), demon:new Image(), rainbow:new Image() };
+const AR  = { girl:520/620, demon:320/500, rainbow:400/450 };
+IMG.girl.src = 'girl.svg'; IMG.demon.src = 'yellow_character.svg'; IMG.rainbow.src = 'rainbow.svg';
+function ready(i){ return i.complete && i.naturalWidth > 0; }
+function art(img, ar, cx, gy, h, alpha, flip){
+  if(!ready(img)) return false;
+  const dw = h*ar;
+  X.save(); X.globalAlpha = alpha;
+  if (flip){ X.translate(cx, 0); X.scale(-1, 1); X.translate(-cx, 0); }
+  X.drawImage(img, cx-dw/2, gy-h, dw, h); X.restore();
+  return true;
+}
+
+function newQ(){
+  const op = C.ops === 'mix' ? (Math.random() < .5 ? '+' : '-') : (C.ops === 'add' ? '+' : '-');
+  let a = rnd(C.max), b = rnd(C.max), ans = op === '+' ? a+b : a-b;
+  for (let i=0; i<80; i++){
+    a = rnd(C.max); b = rnd(C.max);
+    ans = op === '+' ? a+b : a-b;
+    if (ans < 0 && C.neg === 'no'){ ans = -ans; const t=a; a=b; b=t; }
+    if (ans <= C.cap) break;
+  }
+  S.q = { a, b, op }; S.ans = ans; S.typed = ''; S.tq = 0;
+  paintUI();
+}
+
+/* ---------- sound ---------- */
+let AC;
+function beep(freqs, dur=.12, type='square', gain=.14){
+  if(!C.sound) return;
+  try{
+    AC = AC || new (window.AudioContext||window.webkitAudioContext)();
+    if (AC.state === 'suspended') AC.resume();
+    freqs.forEach((f,i)=>{
+      const o=AC.createOscillator(), g=AC.createGain(), t=AC.currentTime+i*.08;
+      o.type=type; o.frequency.value=f;
+      g.gain.setValueAtTime(gain,t); g.gain.exponentialRampToValueAtTime(.001,t+dur);
+      o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t+dur+.03);
+    });
+  }catch(e){}
+}
+
+/* ---------- game ---------- */
+function startGame(){
+  S = fresh(); S.run = true; newQ(); msg('開始！魔王正在靠近 — 答對把它推回去。');
+}
+function msg(t){ el('msg').textContent = t; }
+
+function submit(){
+  if(!S || !S.run || S.over || S.paused || S.typed==='' || S.typed==='-' ) return;
+  const v = parseInt(S.typed,10);
+  if (v === S.ans){
+    S.correct++;
+    S.dist = Math.min(1, S.dist + C.kb / C.time);
+    burst(); rainbowSweep();
+    beep([523,659,784,1046],.12,'square',.12);
+    msg('答對！魔王被擊退。');
+    if (S.correct >= C.win){ S.over='win'; S.bossFade=0; beep([659,784,988,1319,1568],.18,'triangle',.14); msg(`打倒魔王！用了 ${S.correct} 題，答錯 ${S.wrong} 題。`); }
+    newQ();
+  } else {
+    S.wrong++; S.typed='';
+    S.dist = Math.max(0, S.dist - C.pen / C.time);
+    beep([220,175],.2,'square',.14); msg('答錯，魔王更近了一步。');
+  }
+  paintUI();
+}
+
+function step(dt){
+  if(!S) return;
+  tNow += dt;
+  if (S.paused) return;
+  if (S.over){ S.bossFade = Math.max(0, S.bossFade - dt*1.6); S.lunge = Math.min(1, S.lunge + dt*3); }
+  else if (S.run){
+    // 玩家不移動：背景不捲動
+    S.dist -= dt / C.time;              // 魔王持續靠近
+    S.tq += dt;
+    if (S.dist <= 0){ S.dist = 0; S.over = 'caught'; beep([180,140,110],.45,'sawtooth',.18); msg(`被抓到了！答對 ${S.correct} 題。`); }
+  }
+  S.parts.forEach(p => { p.x += p.vx*dt; p.y += p.vy*dt; p.vy += 260*dt; p.life -= dt; });
+  S.parts = S.parts.filter(p => p.life > 0);
+  if (S.sweep){ S.sweep.t += dt/0.9; if (S.sweep.t > 1.4) S.sweep = null; }
+}
+
+function burst(){
+  const cols = ['#D82782','#E64A2F','#F58E1E','#E8C30C','#68BA45','#3FA364','#1FA2DC','#3954A5'];
+  const px = DW*.18, gy = DH*.72, dx = px + DW*.66*S.dist;
+  for(let i=0;i<18;i++){
+    const a = (Math.random()-.5)*.8;
+    S.parts.push({ x:px+40, y:gy-58, vx:(dx-px)/.6*Math.cos(a), vy:-90*Math.sin(a)-40, life:.6+Math.random()*.4, c:cols[i%8] });
+  }
+}
+function rainbowSweep(){
+  const px = DW*.18, gy = DH*.72, dx = px + DW*.66*S.dist;
+  S.sweep = { t:0, x0:px+40, y0:gy-58, x1:dx, y1:gy-72 };
+}
+
+/* ---------- drawing helpers ---------- */
+function r(x,y,w,h,c){ X.fillStyle=c; X.fillRect(x,y,w,h); }
+function ell(x,y,rx,ry,c){ X.fillStyle=c; X.beginPath(); X.ellipse(x,y,rx,ry,0,0,Math.PI*2); X.fill(); }
+
+function drawKnight(x, gy, t, over){
+  X.save(); X.translate(x, gy);
+  ell(0, 0, 24, 7, 'rgba(0,0,0,.35)');
+  r(-11, -16, 8, 16, '#465380'); r(3, -16, 8, 16, '#3a4670');   // 站立的玩家
+  r(-13, -40, 26, 24, '#6b5cff');            // torso
+  r(-10, -56, 20, 16, '#f1c9a0');            // head
+  r(2, -52, 3, 4, '#101728');                // eye
+  r(-10,-58,20,4,'#5b4bd0');                 // cap
+  X.strokeStyle='#8b7bff'; X.lineWidth=4;
+  X.beginPath(); X.moveTo(12,-34); X.lineTo(34,-30); X.stroke();   // arm
+  ell(38,-30,6,6,'#8ef0d6');                                        // wand glow
+  X.restore();
+}
+function drawDemon(x, gy, t, fade, lunge){
+  X.save(); X.globalAlpha = fade; X.translate(x, gy);
+  ell(0, 0, 34, 8, 'rgba(0,0,0,.4)');
+  const bob = Math.sin(t*3)*5, ph = Math.sin(t*5)*5;
+  r(-16, -18, 10, 18, '#3a2550'); r(8, -18, 10, 18, '#2f1e42');
+  r(-22, -54+bob, 44, 36, '#7b3fb0');        // body
+  r(-16, -76+bob, 32, 22, '#8b48c4');        // head
+  // horns
+  X.fillStyle='#d8b4ff';
+  X.beginPath(); X.moveTo(-14,-74+bob); X.lineTo(-22,-92+bob); X.lineTo(-6,-74+bob); X.fill();
+  X.beginPath(); X.moveTo(14,-74+bob); X.lineTo(22,-92+bob); X.lineTo(6,-74+bob); X.fill();
+  // eyes
+  const eg = X.createRadialGradient(0,-68+bob,1,0,-68+bob,22);
+  eg.addColorStop(0,'rgba(255,90,110,.55)'); eg.addColorStop(1,'rgba(255,90,110,0)');
+  X.fillStyle=eg; X.fillRect(-26,-90+bob,52,44);
+  r(-8,-71+bob,7,5,'#ff5d6c'); r(3,-71+bob,7,5,'#ff5d6c');
+  r(-10,-60+bob,20,3,'#f0e2ff');
+  // arms reaching (lunge)
+  X.strokeStyle='#7b3fb0'; X.lineWidth=6;
+  const reach = 20 + lunge*30;
+  X.beginPath(); X.moveTo(-18,-44+bob); X.lineTo(-18-reach,-40+bob+lunge*8); X.stroke();
+  X.restore();
+}
+
+function draw(){
+  if(!S){ X.clearRect(0,0,W,H); return; }
+  X.save(); X.scale(SC,SC);
+  const g = X.createLinearGradient(0,0,0,DH);
+  g.addColorStop(0,'#131e42'); g.addColorStop(1,'#1c2b58');
+  X.fillStyle=g; X.fillRect(0,0,DW,DH);
+  ell(DW*.82, DH*.18, 22, 22, '#f2e9c9');
+  for(let i=0;i<45;i++){ const x=mod(i*97 - S.worldX*.06, DW), y=20+(i*37)%110; X.fillStyle='rgba(255,255,255,.45)'; X.fillRect(x,y,2,2); }
+  const gy = DH*.72;
+  X.fillStyle='#18244a';
+  for(let i=0;i<14;i++){ const x=mod(i*130 - S.worldX*.22, DW+260)-130;
+    X.beginPath(); X.moveTo(x,gy); X.lineTo(x+65,gy-48); X.lineTo(x+130,gy); X.closePath(); X.fill(); }
+  for(let i=0;i<12;i++){ const x=mod(i*110 - S.worldX*.8, DW+120)-60;
+    r(x-3, gy-34, 6, 34, '#223050'); ell(x, gy-40, 14, 12, '#1f3a5c'); }
+  X.fillStyle='#172140'; X.fillRect(0,gy,DW,DH-gy);
+  for(let i=0;i<30;i++){ const x=mod(i*60 - S.worldX, DW+60)-60; X.fillStyle='#233162'; X.fillRect(x,gy+14,30,4); }
+
+  const px = DW*.18, dx = px + DW*.66*S.dist;
+  if(!art(IMG.girl, AR.girl, px, gy, 122, 1, true)) drawKnight(px, gy, tNow, S.over);   // 女孩（橘裙、面向魔王）
+  if(!art(IMG.demon, AR.demon, dx, gy, 190, S.bossFade)) drawDemon(dx, gy, tNow, S.bossFade, S.lunge); // 黃色小人
+
+  S.parts.forEach(p => { X.globalAlpha = Math.max(0,p.life*2); X.fillStyle=p.c; X.fillRect(p.x,p.y,4,4); });
+  X.globalAlpha = 1;
+
+  /* 彩虹劃過（答對時從女孩劃到魔王） */
+  if (S.sweep && ready(IMG.rainbow)){
+    for(let i=0;i<6;i++){
+      const tt = S.sweep.t - i*0.07;
+      if (tt <= 0 || tt > 1) continue;
+      const e = tt*tt*(3-2*tt);
+      const x = S.sweep.x0 + (S.sweep.x1 - S.sweep.x0)*e;
+      const y = S.sweep.y0 + (S.sweep.y1 - S.sweep.y0)*e;
+      const h = 44 + 46*Math.sin(Math.PI*tt);
+      X.save(); X.globalAlpha = Math.max(0, Math.sin(Math.PI*tt) * (1 - i*0.15));
+      X.translate(x, y); X.rotate(-0.28);
+      const dw = h*AR.rainbow; X.drawImage(IMG.rainbow, -dw/2, -h/2, dw, h); X.restore();
+    }
+  }
+
+  /* HUD: only bars (設定數值不顯示) */
+  const bx = 20, bw = DW-40;
+  X.fillStyle='#202a4d'; X.fillRect(bx,18,bw,12);
+  X.fillStyle='#3ddc97'; X.fillRect(bx,18,bw*S.dist,12);
+  X.fillStyle='#ff5d6c'; X.fillRect(bx+bw*S.dist-3,16,3,16);
+  X.fillStyle='#202a4d'; X.fillRect(bx,34,bw,10);
+  X.fillStyle='#7c5cff'; X.fillRect(bx,34,bw*(S.correct/C.win),10);
+  if (S.paused){ X.fillStyle='#9fb0d0'; X.font='12px ui-monospace'; X.textAlign='left'; X.fillText('⏸ 暫停中（設定）', bx, 54); }
+
+  if (S.over){
+    X.fillStyle='rgba(6,10,22,.6)'; X.fillRect(0,0,DW,DH);
+    X.fillStyle='#fff'; X.font='bold 30px ui-monospace'; X.textAlign='center';
+    X.fillText(S.over==='win' ? '🎉 打倒魔王！' : '💀 被抓到了！', DW/2, DH/2);
+    X.font='14px ui-monospace'; X.fillText('按「開始 / 重新開始」再玩一次', DW/2, DH/2+28);
+  }
+  X.restore();
+}
+
+/* ---------- UI ---------- */
+function paintUI(){
+  el('qtext').textContent = S ? `${S.q.a} ${S.q.op} ${S.q.b} =` : '—';
+  el('typed').textContent = S ? (S.typed || '?') : '';
+}
+function keyBtn(k, target, label){
+  const b = document.createElement('button'); b.textContent = label || k;
+  if (k === 'send') b.className = 'go';
+  b.onclick = () => { if (maskOpen || !S) return; clickSfx();
+    if (k === 'del'){ S.typed = S.typed.slice(0,-1); paintUI(); }
+    else if (k === 'send') submit();
+    else if (k === 'minus'){ if (C.neg === 'yes' && S.typed === ''){ S.typed = '-'; paintUI(); } }
+    else { S.typed += k; paintUI(); } };
+  target.appendChild(b);
+}
+const pad = el('pad'), prow = el('prow');
+['1','2','3','4','5','6','7','8','9'].forEach(k => keyBtn(k, pad));   // 九宮格
+[['0','0'],['minus','−'],['del','⌫'],['send','送交⏎']].forEach(([k,l]) => keyBtn(k, prow, l));
+addEventListener('keydown', e => {
+  if (maskOpen) { if (e.key === 'Escape') closeCfg(); return; }
+  if(!S || e.repeat) return;
+  if(/^[0-9]$/.test(e.key)){ clickSfx(); S.typed += e.key; paintUI(); }
+  else if(e.key === 'Enter'){ clickSfx(); submit(); }
+  else if(e.key === 'Backspace'){ clickSfx(); S.typed = S.typed.slice(0,-1); paintUI(); }
+  else if(e.key === '-' && C.neg === 'yes' && !S.typed){ clickSfx(); S.typed = '-'; paintUI(); }
+});
+
+/* ---------- 設定彈窗 ---------- */
+const mask = el('mask');
+let maskOpen = false;
+const keys = ['time','win','max','cap','neg','ops','kb','pen'];
+function openCfg(){
+  keys.forEach(k => { const i = el('i' + k[0].toUpperCase() + k.slice(1)); if (i) i.value = C[k]; });
+  mask.classList.remove('hide'); maskOpen = true;
+  if (S) S.paused = true;
+}
+function closeCfg(){ mask.classList.add('hide'); maskOpen = false; if (S) S.paused = false; }
+el('gear').onclick = openCfg;
+el('close').onclick = closeCfg;
+mask.onclick = e => { if (e.target === mask) closeCfg(); };
+el('apply').onclick = () => {
+  keys.forEach(k => { const i = el('i' + k[0].toUpperCase() + k.slice(1)); if (i) C[k] = i.tagName === 'SELECT' ? i.value : (+i.value || C[k]); });
+  saveCfg(); clickSfx(); closeCfg(); msg('設定已套用並儲存到本地，從下一題開始生效。');
+  if (S && S.q) newQ();
+};
+el('start').onclick = startGame;
+el('mute').onclick = e => { C.sound = !C.sound; saveCfg(); e.target.textContent = C.sound ? '音效 🔊' : '音效 🔇'; };
+
+let last = 0;
+function loop(ts){ const dt = Math.min(.05, (ts-last)/1000 || 0); last = ts; step(dt); draw(); requestAnimationFrame(loop); }
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
