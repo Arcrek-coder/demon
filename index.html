@@ -218,7 +218,7 @@ function submit(){
     S.magic = { t:0, dur:0.75, charge:0.3, hit:false, trail:[], x0:px+34, y0:gy-46, x1:px+DW*.66*S.dist, y1:gy-64, push:C.kb/C.time };
     burst(); rainbowSweep();
     beep([300,520,700],.1,'sine',.09);            // 蓄力
-    beep([900,1200,1500],.08,'square',.09);       // 射出
+    setTimeout(()=>{ if(C.sound) beep([900,1200,1500],.08,'square',.09); }, 300);   // 射出（配合蓄力 0.3s）
     beep([523,659,784,1046],.12,'square',.12);
     msg('答對！魔力在法杖尖端聚集…');
     if (S.correct >= C.win){ S.over='win'; S.bossFade=0; addRec();
