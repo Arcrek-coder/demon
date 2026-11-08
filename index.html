@@ -99,7 +99,7 @@ let S = null, tNow = 0;
 
 function fresh(){
   return { run:false, over:null, paused:false, dist:1, correct:0, wrong:0, q:null, ans:0, typed:'', tq:0,
-           worldX:0, parts:[], bossFade:1, lunge:0, sweep:null };
+           worldX:0, parts:[], bossFade:1, lunge:0, sweep:null, jumping:false, jumpT:0 };
 }
 function mod(a,m){ return ((a % m) + m) % m; }
 function rnd(n){ return 1 + Math.floor(Math.random()*n); }
@@ -166,7 +166,9 @@ function submit(){
   if (v === S.ans){
     S.correct++;
     S.dist = Math.min(1, S.dist + C.kb / C.time);
+    S.jumping = true; S.jumpT = 0;
     burst(); rainbowSweep();
+    beep([320,520,760],.16,'triangle',.09);
     beep([523,659,784,1046],.12,'square',.12);
     msg('答對！魔王被擊退。');
     if (S.correct >= C.win){ S.over='win'; S.bossFade=0; beep([659,784,988,1319,1568],.18,'triangle',.14); msg(`打倒魔王！用了 ${S.correct} 題，答錯 ${S.wrong} 題。`); }
@@ -192,6 +194,7 @@ function step(dt){
   }
   S.parts.forEach(p => { p.x += p.vx*dt; p.y += p.vy*dt; p.vy += 260*dt; p.life -= dt; });
   S.parts = S.parts.filter(p => p.life > 0);
+  if (S.jumping){ S.jumpT += dt/0.6; if (S.jumpT >= 1){ S.jumping = false; S.jumpT = 0; } }
   if (S.sweep){ S.sweep.t += dt/0.9; if (S.sweep.t > 1.4) S.sweep = null; }
 }
 
@@ -212,9 +215,9 @@ function rainbowSweep(){
 function r(x,y,w,h,c){ X.fillStyle=c; X.fillRect(x,y,w,h); }
 function ell(x,y,rx,ry,c){ X.fillStyle=c; X.beginPath(); X.ellipse(x,y,rx,ry,0,0,Math.PI*2); X.fill(); }
 
-function drawKnight(x, gy, t, over){
+function drawKnight(x, gy, t, over, noShadow){
   X.save(); X.translate(x, gy);
-  ell(0, 0, 24, 7, 'rgba(0,0,0,.35)');
+  if(!noShadow) ell(0, 0, 24, 7, 'rgba(0,0,0,.35)');
   r(-11, -16, 8, 16, '#465380'); r(3, -16, 8, 16, '#3a4670');   // 站立的玩家
   r(-13, -40, 26, 24, '#6b5cff');            // torso
   r(-10, -56, 20, 16, '#f1c9a0');            // head
@@ -267,7 +270,9 @@ function draw(){
   for(let i=0;i<30;i++){ const x=mod(i*60 - S.worldX, DW+60)-60; X.fillStyle='#233162'; X.fillRect(x,gy+14,30,4); }
 
   const px = DW*.18, dx = px + DW*.66*S.dist;
-  if(!art(IMG.girl, AR.girl, px, gy, 122, 1, true)) drawKnight(px, gy, tNow, S.over);   // 女孩（橘裙、面向魔王）
+  const jh = S.jumping ? 4*44*Math.min(1,S.jumpT)*(1-Math.min(1,S.jumpT)) : 0;
+  ell(px, gy, 24, 7, `rgba(0,0,0,${0.35 - 0.18*(jh/44)})`);            // 影子留在地面
+  if(!art(IMG.girl, AR.girl, px, gy - jh, 122, 1, true)) drawKnight(px, gy - jh, tNow, S.over, true);   // 女孩（橘裙、面向魔王）
   if(!art(IMG.demon, AR.demon, dx, gy, 190, S.bossFade)) drawDemon(dx, gy, tNow, S.bossFade, S.lunge); // 黃色小人
 
   S.parts.forEach(p => { X.globalAlpha = Math.max(0,p.life*2); X.fillStyle=p.c; X.fillRect(p.x,p.y,4,4); });
