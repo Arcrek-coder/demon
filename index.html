@@ -33,16 +33,23 @@ button.sec{background:#223054}
 #qtext{font-size:24px;font-weight:700}
 #typed{font-size:24px;font-weight:700;color:var(--good);min-width:60px}
 #msg{min-height:20px;font-size:13px;color:#9fb0d0}
+#starbtns{display:flex;flex-wrap:wrap;gap:4px}
+#starbtns button{min-height:34px;padding:7px 9px;font-size:15px;background:#1b2645}
+#starbtns button.on{background:var(--acc)}
+#starhint{font-size:12px;color:#9fb0d0;flex:1 1 100%}
+#reclist{max-height:44vh;overflow:auto;font-size:12px;line-height:1.6}
+#reclist div{border-bottom:1px solid var(--line);padding:4px 2px}
+#recsum{font-size:13px;margin-bottom:6px}
 @media (max-width:520px){ #qcard{flex:1 1 100%} #keys{flex:1 1 100%} #pad button{min-height:48px;font-size:20px} }
-#mask{position:fixed;inset:0;background:rgba(5,8,18,.65);display:flex;align-items:center;justify-content:center;z-index:5}
-#mask.hide{display:none}
-#modal{background:#141c36;border:1px solid #2b3557;border-radius:14px;padding:16px 18px;max-width:360px;width:92%;box-shadow:0 10px 40px rgba(0,0,0,.55)}
-#modal h2{margin:0 0 10px;font-size:16px}
-#modal .fld{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:7px 0}
-#modal .fld span{display:flex;flex-direction:column;gap:2px}
-#modal .fld i{font-style:normal;font-size:12px;color:#9fb0d0}
-#modal .actions{display:flex;gap:8px;margin-top:12px}
-#modal .note{font-size:12px;color:#9fb0d0;margin-top:8px}
+#mask,#recmask{position:fixed;inset:0;background:rgba(5,8,18,.65);display:flex;align-items:center;justify-content:center;z-index:5}
+#mask.hide,#recmask.hide{display:none}
+.box{background:#141c36;border:1px solid #2b3557;border-radius:14px;padding:16px 18px;max-width:360px;width:92%;box-shadow:0 10px 40px rgba(0,0,0,.55)}
+.box h2{margin:0 0 10px;font-size:16px}
+.box .fld{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:7px 0}
+.box .fld span{display:flex;flex-direction:column;gap:2px}
+.box .fld i{font-style:normal;font-size:12px;color:#9fb0d0}
+.box .actions{display:flex;gap:8px;margin-top:12px}
+.box .note{font-size:12px;color:#9fb0d0;margin-top:8px}
 </style>
 </head>
 <body>
@@ -53,6 +60,12 @@ button.sec{background:#223054}
     <button id="start">開始 / 重新開始</button>
     <button class="sec" id="mute">音效 🔊</button>
     <button class="sec" id="gear">⚙️ 設定</button>
+    <button class="sec" id="rec">📊 紀錄</button>
+  </div>
+
+  <div class="row">
+    <div id="starbtns"></div>
+    <div id="starhint"></div>
   </div>
 
   <canvas id="game"></canvas>
@@ -64,8 +77,18 @@ button.sec{background:#223054}
   <div id="msg">答對把魔王推回去；拖太久或答錯會被抓住。</div>
 </div>
 
+<div id="recmask" class="hide">
+  <div class="box">
+    <h2>📊 打退魔王紀錄</h2>
+    <div id="recsum"></div>
+    <div id="reclist"></div>
+    <div class="note">每打退一次魔王就存一筆（含當時的星級、秒數、題型設定）。</div>
+    <div class="actions"><button class="sec" id="recClear">清空紀錄</button><button class="sec" id="recClose">關閉</button></div>
+  </div>
+</div>
+
 <div id="mask" class="hide">
-  <div id="modal">
+  <div class="box">
     <h2>⚙️ 設定</h2>
     <div class="fld"><span>答題時間（秒）<i>每一題最多可用時間；魔王走完一趟剛好=this秒數</i></span><input type="number" inputmode="numeric" id="iTime" min="3" max="60"></div>
     <div class="fld"><span>打倒魔王需答對（題）<i>累積答對幾題就獲勝</i></span><input type="number" inputmode="numeric" id="iWin" min="3" max="30"></div>
@@ -73,8 +96,8 @@ button.sec{background:#223054}
     <div class="fld"><span>答案上限<i>題目的答案不可超過此值；太大會自動重抽題目</i></span><input type="number" inputmode="numeric" id="iCap" min="2" max="200"></div>
     <div class="fld"><span>減法負數<i>不允許：大數放前，答案≥ 0；允許：可出現 6-9=-3，需輸入負號</i></span><select id="iNeg"><option value="no">不允許負答案</option><option value="yes">允許負答案</option></select></div>
     <div class="fld"><span>運算<i>混合 = 每題隨機加或減</i></span><select id="iOps"><option value="mix">加＋減</option><option value="add">只有加法</option><option value="sub">只有減法</option></select></div>
-    <div class="fld"><span>答對擊退（秒）<i>在這些秒數內答對，魔王才會被推回去</i></span><input type="number" inputmode="numeric" id="iKb" min="1" max="30"></div>
-    <div class="fld"><span>答錯前進（秒）<i>答錯時魔王立刻多走這些秒數的距離（0=不倒退）</i></span><input type="number" inputmode="numeric" id="iPen" min="0" max="30"></div>
+    <div class="fld"><span>答對擊退（秒）<i>在這些秒數內答對，魔王才會被推回去</i></span><input type="number" inputmode="numeric" id="iKb" min="0.5" max="30" step="0.5"></div>
+    <div class="fld"><span>答錯前進（秒）<i>答錯時魔王立刻多走這些秒數的距離（0=不倒退）</i></span><input type="number" inputmode="numeric" id="iPen" min="0" max="30" step="0.5"></div>
     <div class="actions"><button id="apply">套用</button><button class="sec" id="close">關閉</button></div>
     <div class="note">打開設定時遊戲暫停；套用後從下一題開始生效。</div>
   </div>
@@ -93,12 +116,31 @@ resize();
 
 const el = id => document.getElementById(id);
 // ===== 設定（可用 ⚙️ 設定彈窗修改）=====
-const C = { time:12, win:10, max:12, cap:20, neg:'no', ops:'mix', kb:8, pen:2, sound:true };
+const C = { star:3, time:12, win:10, max:12, cap:20, neg:'no', ops:'mix', kb:8, pen:2, sound:true };
+/* ===== 難度星星 0~10（0 最易，10 最難）=====
+   星級一次決定：題型、數字範圍、答案上限、負數、每題秒數、答對擊退、答錯前進、獲勝題數 */
+const STAR = [
+  {ops:'add', max:3,  cap:5,  neg:'no',  time:15, kb:8,   pen:0,   win:3 },
+  {ops:'add', max:4,  cap:7,  neg:'no',  time:14, kb:7,   pen:0,   win:4 },
+  {ops:'add', max:5,  cap:10, neg:'no',  time:13, kb:6,   pen:0,   win:5 },
+  {ops:'add', max:6,  cap:12, neg:'no',  time:12, kb:5,   pen:1,   win:5 },
+  {ops:'mix', max:7,  cap:15, neg:'no',  time:12, kb:4.5, pen:1,   win:6 },
+  {ops:'mix', max:8,  cap:18, neg:'no',  time:11, kb:4,   pen:1.5, win:6 },
+  {ops:'mix', max:10, cap:20, neg:'no',  time:10, kb:3.5, pen:1.5, win:7 },
+  {ops:'mix', max:12, cap:25, neg:'no',  time:9,  kb:3,   pen:2,   win:8 },
+  {ops:'mix', max:15, cap:40, neg:'yes', time:8,  kb:2.5, pen:2,   win:9 },
+  {ops:'mix', max:20, cap:60, neg:'yes', time:7,  kb:2,   pen:2,   win:10},
+  {ops:'mix', max:30, cap:99, neg:'yes', time:6,  kb:1.5, pen:2.5, win:12}
+];
+const SK = ['ops','max','cap','neg','time','kb','pen','win'];
+function isCustom(){ return C.star==null || !STAR[C.star] || SK.some(k => C[k] !== STAR[C.star][k]); }
+function starTxt(s){ const t = STAR[s]; if(!t) return ''; const o = t.ops==='add'?'加法':(t.ops==='sub'?'減法':'加＋減');
+  return `${s}★ ${o}、1–${t.max}、答案≤${t.cap}${t.neg==='yes'?'、可負數':''}、每題 ${t.time}s、答對推 ${t.kb}s、答錯進 ${t.pen}s、${t.win} 題打退魔王`; }
 // ==========================================
 let S = null, tNow = 0;
 
 function fresh(){
-  return { run:false, over:null, paused:false, dist:1, correct:0, wrong:0, q:null, ans:0, typed:'', tq:0,
+  return { run:false, over:null, paused:false, dist:1, correct:0, wrong:0, q:null, ans:0, typed:'', tq:0, elapsed:0,
            worldX:0, parts:[], bossFade:1, lunge:0, sweep:null, jumping:false, jumpT:0 };
 }
 function mod(a,m){ return ((a % m) + m) % m; }
@@ -171,7 +213,8 @@ function submit(){
     beep([320,520,760],.16,'triangle',.09);
     beep([523,659,784,1046],.12,'square',.12);
     msg('答對！魔王被擊退。');
-    if (S.correct >= C.win){ S.over='win'; S.bossFade=0; beep([659,784,988,1319,1568],.18,'triangle',.14); msg(`打倒魔王！用了 ${S.correct} 題，答錯 ${S.wrong} 題。`); }
+    if (S.correct >= C.win){ S.over='win'; S.bossFade=0; addRec();
+      beep([659,784,988,1319,1568],.18,'triangle',.14); msg(`打倒魔王！用了 ${S.correct} 題，答錯 ${S.wrong} 題，用時 ${Math.round(S.elapsed*10)/10}s。（已存入紀錄）`); }
     newQ();
   } else {
     S.wrong++; S.typed='';
@@ -185,6 +228,7 @@ function step(dt){
   if(!S) return;
   tNow += dt;
   if (S.paused) return;
+  if (S.run && !S.over) S.elapsed += dt;
   if (S.over){ S.bossFade = Math.max(0, S.bossFade - dt*1.6); S.lunge = Math.min(1, S.lunge + dt*3); }
   else if (S.run){
     // 玩家不移動：背景不捲動
@@ -301,6 +345,8 @@ function draw(){
   X.fillStyle='#202a4d'; X.fillRect(bx,34,bw,10);
   X.fillStyle='#7c5cff'; X.fillRect(bx,34,bw*(S.correct/C.win),10);
   if (S.paused){ X.fillStyle='#9fb0d0'; X.font='12px ui-monospace'; X.textAlign='left'; X.fillText('⏸ 暫停中（設定）', bx, 54); }
+  X.fillStyle='#9fb0d0'; X.font='12px ui-monospace'; X.textAlign='right';
+  X.fillText(`★${isCustom() ? '自訂' : C.star} · ${C.time}s · 答對 ${S.correct}/${C.win} · ${Math.round(S.elapsed)}s`, DW-20, 54);
 
   if (S.over){
     X.fillStyle='rgba(6,10,22,.6)'; X.fillRect(0,0,DW,DH);
@@ -330,6 +376,7 @@ const pad = el('pad'), prow = el('prow');
 ['1','2','3','4','5','6','7','8','9'].forEach(k => keyBtn(k, pad));   // 九宮格
 [['0','0'],['minus','−'],['del','⌫'],['send','送交⏎']].forEach(([k,l]) => keyBtn(k, prow, l));
 addEventListener('keydown', e => {
+  if (recOpen) { if (e.key === 'Escape') closeRec(); return; }
   if (maskOpen) { if (e.key === 'Escape') closeCfg(); return; }
   if(!S || e.repeat) return;
   if(/^[0-9]$/.test(e.key)){ clickSfx(); S.typed += e.key; paintUI(); }
@@ -342,8 +389,9 @@ addEventListener('keydown', e => {
 const mask = el('mask');
 let maskOpen = false;
 const keys = ['time','win','max','cap','neg','ops','kb','pen'];
+function fillInputs(){ keys.forEach(k => { const i = el('i' + k[0].toUpperCase() + k.slice(1)); if (i) i.value = C[k]; }); }
 function openCfg(){
-  keys.forEach(k => { const i = el('i' + k[0].toUpperCase() + k.slice(1)); if (i) i.value = C[k]; });
+  fillInputs();
   mask.classList.remove('hide'); maskOpen = true;
   if (S) S.paused = true;
 }
@@ -353,11 +401,49 @@ el('close').onclick = closeCfg;
 mask.onclick = e => { if (e.target === mask) closeCfg(); };
 el('apply').onclick = () => {
   keys.forEach(k => { const i = el('i' + k[0].toUpperCase() + k.slice(1)); if (i) C[k] = i.tagName === 'SELECT' ? i.value : (+i.value || C[k]); });
-  saveCfg(); clickSfx(); closeCfg(); msg('設定已套用並儲存到本地，從下一題開始生效。');
+  saveCfg(); syncStar(); clickSfx(); closeCfg(); msg('設定已套用並儲存到本地，從下一題開始生效。');
   if (S && S.q) newQ();
 };
 el('start').onclick = startGame;
 el('mute').onclick = e => { C.sound = !C.sound; saveCfg(); e.target.textContent = C.sound ? '音效 🔊' : '音效 🔇'; };
+
+/* ---------- 星級快速選擇 ---------- */
+const sb = el('starbtns');
+for(let s=0; s<=10; s++){
+  const b = document.createElement('button'); b.dataset.s = s; b.textContent = '★' + s; b.title = starTxt(s);
+  b.onclick = () => { clickSfx(); C.star = s; Object.assign(C, STAR[s]); saveCfg(); syncStar(); fillInputs();
+    if (S && S.q) newQ(); msg(starTxt(s)); };
+  sb.appendChild(b);
+}
+function syncStar(){
+  el('starhint').textContent = isCustom() ? starTxt(C.star) + '（⚙️ 自訂過）' : starTxt(C.star);
+  [...sb.children].forEach(b => b.classList.toggle('on', +b.dataset.s === C.star && !isCustom()));
+}
+
+/* ---------- 打退魔王紀錄 ---------- */
+const REC = 'math-demon-chase-records';
+let recOpen = false;
+function loadRec(){ try{ return JSON.parse(localStorage.getItem(REC)) || [] }catch(e){ return [] } }
+function saveRec(a){ try{ localStorage.setItem(REC, JSON.stringify(a.slice(-60))) }catch(e){} }
+function addRec(){ if(!S) return; const a = loadRec();
+  a.push({ d:new Date().toISOString(), s:isCustom()?'自訂':C.star, t:C.time, o:C.ops, m:C.max, cp:C.cap, n:C.neg,
+           kb:C.kb, pn:C.pen, w:C.win, c:S.correct, wr:S.wrong, e:Math.round(S.elapsed*10)/10 });
+  saveRec(a); }
+function renderRec(){
+  const a = loadRec().slice().reverse();
+  const best = a.reduce((b,r)=> (!b || r.e < b.e) ? r : b, null);
+  el('recsum').textContent = `打退魔王 ${a.length} 次` + (best ? ` · 最快 ${best.e}s（${best.s}）` : '');
+  el('reclist').innerHTML = a.length ? a.map(r => `<div>${r.d.slice(0,10)} ${r.d.slice(11,16)} · ${typeof r.s==='number' ? '★'+r.s : r.s} · ${r.t}s · ${r.o==='add'?'加':(r.o==='sub'?'減':'加+減')} 1–${r.m} ≤${r.cp}${r.n==='yes'?'(負)':''} · 對 ${r.c} 錯 ${r.wr} · 用時 ${r.e}s</div>`).join('') : '<div>還沒有紀錄</div>';
+}
+const rm = el('recmask');
+function openRec(){ renderRec(); rm.classList.remove('hide'); recOpen = true; }
+function closeRec(){ rm.classList.add('hide'); recOpen = false; }
+el('rec').onclick = () => { clickSfx(); openRec(); };
+el('recClose').onclick = closeRec;
+el('recClear').onclick = () => { saveRec([]); renderRec(); };
+rm.onclick = e => { if (e.target === rm) closeRec(); };
+
+syncStar();
 
 let last = 0;
 function loop(ts){ const dt = Math.min(.05, (ts-last)/1000 || 0); last = ts; step(dt); draw(); requestAnimationFrame(loop); }
